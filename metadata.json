@@ -1,0 +1,5 @@
+{
+  "name": "MindVault - Intelligent Notes Hub",
+  "description": "A static, AI-enhanced Markdown notes hub for studying. Upload, edit, and organize notes with automatic metadata parsing, JSON export/import, and Gemini-powered study assistance.",
+  "requestFramePermissions": []
+}
