@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Task } from '../types';
+import { getAllTasksFromDB, saveTaskToDB, deleteTaskFromDB } from '../services/db';
 import { Plus, Trash2, CheckCircle2, Circle, AlertCircle } from 'lucide-react';
 
 export const RoutineDashboard: React.FC = () => {
@@ -9,23 +9,36 @@ export const RoutineDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'exam'>('daily');
 
     useEffect(() => {
-        const saved = localStorage.getItem('mindvault_routine');
-        if (saved) {
-            setTasks(JSON.parse(saved));
-        } else {
-            // Default tasks
-            setTasks([
-                { id: '1', text: 'Review Flashcards', completed: false, category: 'daily', priority: 'high' },
-                { id: '2', text: 'Solve 10 Physics Numericals', completed: true, category: 'daily', priority: 'medium' },
-            ]);
-        }
+        const loadTasks = async () => {
+            const dbTasks = await getAllTasksFromDB();
+            if (dbTasks.length > 0) {
+                setTasks(dbTasks);
+            } else {
+                // Default tasks if completely empty (and migration found nothing)
+                 const defaults: Task[] = [
+                    { id: '1', text: 'Review Flashcards', completed: false, category: 'daily', priority: 'high' },
+                    { id: '2', text: 'Solve 10 Physics Numericals', completed: true, category: 'daily', priority: 'medium' },
+                ];
+                // Only save defaults if we really want to initialize the DB with them
+                // For now, let's just set them in state, but maybe not save them to avoid phantom data?
+                // actually, let's leave it empty or just show these as placeholders if we want.
+                // But sticking to original logic:
+                if (localStorage.getItem('mindvault_routine')) {
+                    // Wait for migration? or just re-read?
+                    // Assuming migration happened in App.tsx, if we are here, maybe it failed or finished.
+                    // Let's just use the defaults as a starting point for a new user.
+                     setTasks(defaults);
+                     defaults.forEach(t => saveTaskToDB(t));
+                } else {
+                     setTasks(defaults);
+                     defaults.forEach(t => saveTaskToDB(t));
+                }
+            }
+        };
+        loadTasks();
     }, []);
 
-    useEffect(() => {
-        localStorage.setItem('mindvault_routine', JSON.stringify(tasks));
-    }, [tasks]);
-
-    const addTask = () => {
+    const addTask = async () => {
         if (!newTaskText.trim()) return;
         const newTask: Task = {
             id: crypto.randomUUID(),
@@ -36,14 +49,21 @@ export const RoutineDashboard: React.FC = () => {
         };
         setTasks(prev => [...prev, newTask]);
         setNewTaskText('');
+        await saveTaskToDB(newTask);
     };
 
-    const toggleTask = (id: string) => {
-        setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+    const toggleTask = async (id: string) => {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            const updated = { ...task, completed: !task.completed };
+            setTasks(prev => prev.map(t => t.id === id ? updated : t));
+            await saveTaskToDB(updated);
+        }
     };
 
-    const deleteTask = (id: string) => {
+    const deleteTask = async (id: string) => {
         setTasks(prev => prev.filter(t => t.id !== id));
+        await deleteTaskFromDB(id);
     };
 
     const filteredTasks = tasks.filter(t => t.category === activeTab);

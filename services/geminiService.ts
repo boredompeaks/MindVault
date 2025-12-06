@@ -1,12 +1,31 @@
-
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { GEMINI_FLASH_MODEL, GEMINI_PRO_MODEL, SUBJECTS } from "../constants";
-import { QuizQuestion, ChatMessage } from "../types";
+import { QuizQuestion, ChatMessage, Attachment } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAIClient = () => {
+  const keys = [
+    import.meta.env.VITE_API_KEY_1,
+    import.meta.env.VITE_API_KEY_2
+  ].filter(Boolean);
+
+  if (keys.length === 0) {
+    const errorMsg = 
+      '❌ No Gemini API keys configured!\n' +
+      'Please set VITE_API_KEY_1 and/or VITE_API_KEY_2 in your .env file.\n' +
+      'Get your keys from: https://aistudio.google.com/app/apikey\n' +
+      'See .env.example for reference.';
+    console.error(errorMsg);
+    throw new Error("Missing API Keys - Check console for setup instructions");
+  }
+
+  // Random rotation for basic load balancing
+  const randomKey = keys[Math.floor(Math.random() * keys.length)];
+  return new GoogleGenAI({ apiKey: randomKey });
+};
 
 export const generateNoteSummary = async (content: string): Promise<string> => {
   try {
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: GEMINI_FLASH_MODEL,
       contents: `Summarize the following study notes into a concise paragraph, highlighting key concepts: \n\n${content}`,
@@ -23,7 +42,7 @@ export const generateNoteSummary = async (content: string): Promise<string> => {
 
 export const generateQuizFromNote = async (content: string): Promise<QuizQuestion[]> => {
   try {
-    // Generate 10 questions with randomization
+    const ai = getAIClient();
     const seed = Math.floor(Math.random() * 1000);
     const quizSchema: Schema = {
       type: Type.ARRAY,
@@ -67,8 +86,8 @@ export const generateQuizFromNote = async (content: string): Promise<QuizQuestio
 
 export const identifySubject = async (content: string): Promise<string> => {
   try {
+    const ai = getAIClient();
     const validSubjects = SUBJECTS.join(", ");
-    // Strict prompt to ensure it matches one of the valid subjects
     const response = await ai.models.generateContent({
       model: GEMINI_FLASH_MODEL,
       contents: `You are a strict classifier. Analyze the following note content and identify the single most relevant academic Subject from this list: [${validSubjects}]. 
@@ -85,16 +104,12 @@ export const identifySubject = async (content: string): Promise<string> => {
       }
     });
     let result = response.text?.trim() || "General";
-    // Remove quotes and periods if model adds them
     result = result.replace(/['".]/g, '');
     
-    // Fuzzy fallback validation: check if result matches any subject loosely
     const lowerResult = result.toLowerCase();
     const exactMatch = SUBJECTS.find(s => s.toLowerCase() === lowerResult);
-    
     if (exactMatch) return exactMatch;
     
-    // Fallback: Check if any subject is contained in the string
     const partialMatch = SUBJECTS.find(s => lowerResult.includes(s.toLowerCase()));
     if (partialMatch) return partialMatch;
 
@@ -106,6 +121,7 @@ export const identifySubject = async (content: string): Promise<string> => {
 
 export const generateTitle = async (content: string): Promise<string> => {
   try {
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: GEMINI_FLASH_MODEL,
       contents: `Read the following study note and generate a short, descriptive Chapter Name or Title (e.g., "Newton's Laws of Motion", "The French Revolution"). Max 6 words. Do not use quotes. Content: ${content.substring(0, 1000)}`,
@@ -119,10 +135,15 @@ export const generateTitle = async (content: string): Promise<string> => {
   }
 };
 
-export const chatWithNote = async (history: ChatMessage[], currentNoteContent: string, userMessage: string): Promise<string> => {
+export const chatWithNote = async (
+    history: ChatMessage[], 
+    currentNoteContent: string, 
+    userMessage: string,
+    attachments: Attachment[] = []
+): Promise<string> => {
   try {
-    const context = `You are an expert tutor. The user is studying the following notes:\n---\n${currentNoteContent}\n---\n
-    Answer the user's questions based on these notes. If the answer isn't in the notes, use your general knowledge. Use Markdown for formatting.`;
+    const ai = getAIClient();
+    const context = `You are an expert tutor. The user is studying the following notes:\n---\n${currentNoteContent}\n---\n    Answer the user's questions based on these notes. If the answer isn't in the notes, use your general knowledge. Use Markdown for formatting.`;
 
     const chat = ai.chats.create({
       model: GEMINI_FLASH_MODEL,
@@ -135,7 +156,18 @@ export const chatWithNote = async (history: ChatMessage[], currentNoteContent: s
       }))
     });
 
-    const result = await chat.sendMessage({ message: userMessage });
+    const parts: any[] = [{ text: userMessage }];
+
+    // Attach PDF/Images to the prompt if they exist
+    for (const att of attachments) {
+        if (att.data) {
+             const cleanBase64 = att.data.includes('base64,') ? att.data.split('base64,')[1] : att.data;
+             const mimeType = att.type === 'pdf' ? 'application/pdf' : 'image/jpeg'; // Simplification
+             parts.push({ inlineData: { mimeType, data: cleanBase64 } });
+        }
+    }
+
+    const result = await chat.sendMessage({ parts });
     return result.text || "I couldn't generate a response.";
   } catch (e) {
     console.error("Chat Error", e);
@@ -143,10 +175,11 @@ export const chatWithNote = async (history: ChatMessage[], currentNoteContent: s
   }
 };
 
-// --- Deep Study Features (Gemini 3 Pro) ---
+// --- Deep Study Features ---
 
 export const generateDetailedNotesFromPDF = async (pdfBase64: string): Promise<string> => {
     try {
+        const ai = getAIClient();
         const cleanBase64 = pdfBase64.includes('base64,') ? pdfBase64.split('base64,')[1] : pdfBase64;
         
         const response = await ai.models.generateContent({
@@ -167,6 +200,7 @@ export const generateDetailedNotesFromPDF = async (pdfBase64: string): Promise<s
 
 export const generateICSEPaper = async (config: { subject: string, pattern: string, marks: number, focus?: string }, content: string): Promise<string> => {
     try {
+        const ai = getAIClient();
         const prompt = `Create a strictly formatted ICSE Board Exam Question Paper.\n
         Subject: ${config.subject}
         Pattern/Type: ${config.pattern}
@@ -200,6 +234,7 @@ export const gradeAnswerSheet = async (
     referenceNotes: string
 ): Promise<string> => {
     try {
+        const ai = getAIClient();
         const parts: any[] = [];
         
         // Add Images

@@ -1,7 +1,8 @@
 
-export const GEMINI_FLASH_MODEL = 'gemini-2.5-flash';
-export const GEMINI_PRO_MODEL = 'gemini-3-pro-preview';
+export const GEMINI_FLASH_MODEL = 'gemini-1.5-flash';
+export const GEMINI_PRO_MODEL = 'gemini-1.5-pro';
 export const APP_STORAGE_KEY = 'mindvault_notes_v3'; 
+export const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 
 export const SUBJECTS = [
   "History",

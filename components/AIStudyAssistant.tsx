@@ -1,23 +1,23 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { generateNoteSummary, generateQuizFromNote, chatWithNote } from '../services/geminiService';
-import { QuizQuestion, ChatMessage } from '../types';
-import { Sparkles, Send, Loader2, MessageCircleQuestion, GraduationCap, Brain, Info, X } from 'lucide-react';
+import { QuizQuestion, ChatMessage, Attachment } from '../types';
+import { Sparkles, Send, Loader2, MessageCircleQuestion, GraduationCap, Brain, Info, X, Paperclip } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface AIStudyAssistantProps {
   noteContent: string;
   onClose: () => void;
-  // Props for persistence
   chatHistory: ChatMessage[];
   setChatHistory: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  attachments?: Attachment[];
 }
 
 export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({ 
     noteContent, 
     onClose,
     chatHistory,
-    setChatHistory
+    setChatHistory,
+    attachments = []
 }) => {
   const [activeTab, setActiveTab] = useState<'summary' | 'quiz' | 'chat'>('chat');
   
@@ -63,14 +63,18 @@ export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({
     setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
     setLoading(true);
 
-    const response = await chatWithNote(chatHistory, noteContent, userMsg);
+    // Pass attachments to the service
+    const response = await chatWithNote(chatHistory, noteContent, userMsg, attachments);
     
     setChatHistory(prev => [...prev, { role: 'model', text: response }]);
     setLoading(false);
   };
 
+  const pdfCount = attachments.filter(a => a.type === 'pdf').length;
+  const imgCount = attachments.filter(a => a.type === 'image').length;
+
   return (
-    <div className="h-full flex flex-col bg-white border-l border-gray-200 w-[500px] shadow-2xl fixed right-0 top-0 z-50 overflow-hidden">
+    <div className="h-full flex flex-col bg-white border-l border-gray-200 w-[500px] shadow-2xl fixed right-0 top-0 z-50 overflow-hidden animate-slide-in-right">
       {/* Header */}
       <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-indigo-600 text-white shrink-0">
         <h2 className="font-bold flex items-center gap-2">
@@ -111,9 +115,17 @@ export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({
         {activeTab === 'chat' && (
           <div className="flex flex-col h-full">
             {/* Info Banner */}
-            <div className="mb-4 bg-indigo-50 border border-indigo-100 p-2 rounded-lg flex items-center gap-2 text-[10px] text-indigo-700">
-                <Info className="w-3 h-3" />
-                <span>Model: <strong>Gemini 2.5 Flash</strong> | Limit: ~15 Req/Min (Free Tier)</span>
+            <div className="mb-4 bg-indigo-50 border border-indigo-100 p-2 rounded-lg flex flex-col gap-1 text-[10px] text-indigo-700">
+                <div className="flex items-center gap-2">
+                    <Info className="w-3 h-3" />
+                    <span>Model: <strong>Gemini 1.5 Flash</strong> (Multimodal)</span>
+                </div>
+                {(pdfCount > 0 || imgCount > 0) && (
+                    <div className="flex items-center gap-2 ml-5 text-indigo-600 font-medium">
+                        <Paperclip className="w-3 h-3" />
+                        <span>Context: {pdfCount} PDF(s), {imgCount} Image(s) loaded.</span>
+                    </div>
+                )}
             </div>
 
             <div className="flex-1 space-y-4 mb-4">
@@ -155,7 +167,7 @@ export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Ask a doubt..."
+                    placeholder={attachments.length > 0 ? "Ask about the attached files..." : "Ask a doubt..."}
                     className="w-full pr-10 pl-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm"
                 />
                 <button 

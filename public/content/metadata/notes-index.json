@@ -1,0 +1,50 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-15T00:00:00Z",
+  "notes": [
+    {
+      "id": "getting-started",
+      "title": "Getting Started with MindVault",
+      "subject": "General",
+      "tags": ["tutorial", "basics", "introduction"],
+      "author": "MindVault Team",
+      "createdAt": "2024-01-15T00:00:00Z",
+      "updatedAt": "2024-01-15T00:00:00Z",
+      "fileName": "getting-started.md",
+      "description": "Learn how to use MindVault effectively for your studies",
+      "difficulty": "beginner",
+      "estimatedReadTime": 5,
+      "featured": true
+    },
+    {
+      "id": "physics-motion",
+      "title": "Newton's Laws of Motion",
+      "subject": "Physics",
+      "tags": ["physics", "mechanics", "motion", "laws"],
+      "author": "MindVault Team",
+      "createdAt": "2024-01-15T00:00:00Z",
+      "updatedAt": "2024-01-15T00:00:00Z",
+      "fileName": "physics-motion.md",
+      "description": "Comprehensive notes on Newton's three laws of motion with examples",
+      "difficulty": "intermediate",
+      "estimatedReadTime": 15,
+      "featured": true
+    },
+    {
+      "id": "chemistry-periodic-table",
+      "title": "The Periodic Table",
+      "subject": "Chemistry",
+      "tags": ["chemistry", "periodic-table", "elements"],
+      "author": "MindVault Team",
+      "createdAt": "2024-01-15T00:00:00Z",
+      "updatedAt": "2024-01-15T00:00:00Z",
+      "fileName": "chemistry-periodic-table.md",
+      "description": "Understanding the periodic table, groups, and trends",
+      "difficulty": "intermediate",
+      "estimatedReadTime": 20,
+      "featured": false
+    }
+  ],
+  "subjects": ["General", "Physics", "Chemistry", "Mathematics", "Biology", "Computer Science"],
+  "tags": ["tutorial", "basics", "introduction", "physics", "mechanics", "motion", "laws", "chemistry", "periodic-table", "elements"]
+}

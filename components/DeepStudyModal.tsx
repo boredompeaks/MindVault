@@ -125,7 +125,7 @@ export const DeepStudyModal: React.FC<DeepStudyModalProps> = ({
                          </div>
                          <div>
                              <h2 className="text-xl font-bold">Deep Study</h2>
-                             <p className="text-xs text-slate-400">Powered by Gemini 3.0 Pro</p>
+                             <p className="text-xs text-slate-400">Powered by Gemini 1.5 Flash & Pro</p>
                          </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-700 rounded-full transition-colors">
