@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { Note } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { select, pack as d3Pack, hierarchy, scaleOrdinal, schemeTableau10 } from 'd3';
+import * as d3 from 'd3';
 
 interface DashboardProps {
   notes: Note[];
@@ -43,21 +43,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ notes }) => {
   useEffect(() => {
     if (!d3Container.current || tagStats.length === 0) return;
 
-    const svg = select(d3Container.current);
+    const svg = d3.select(d3Container.current);
     svg.selectAll("*").remove();
 
     const width = 400;
     const height = 300;
     
-    const pack = d3Pack<{name: string, value: number}>()
+    const pack = d3.pack<{name: string, value: number}>()
         .size([width, height])
         .padding(5);
 
-    const root = hierarchy({ children: tagStats } as any)
+    const root = d3.hierarchy({ children: tagStats } as any)
         .sum((d: any) => d.value);
 
     const nodes = pack(root).leaves();
-    const color = scaleOrdinal(schemeTableau10);
+    const color = d3.scaleOrdinal(d3.schemeTableau10);
 
     const g = svg.append("g");
 
@@ -71,8 +71,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ notes }) => {
         .attr("fill", (d: any) => color(d.data.name))
         .attr("opacity", 0.8)
         .attr("cursor", "pointer")
-        .on("mouseover", function() { select(this).attr("opacity", 1); })
-        .on("mouseout", function() { select(this).attr("opacity", 0.8); });
+        .on("mouseover", function() { d3.select(this).attr("opacity", 1); })
+        .on("mouseout", function() { d3.select(this).attr("opacity", 0.8); });
 
     leaf.append("text")
         .text((d: any) => d.data.name.substring(0, d.r / 3))

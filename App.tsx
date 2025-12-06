@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { Note, ViewMode, Attachment, ChatMessage, DeepStudyMode, Toast } from './types';
@@ -18,6 +19,9 @@ import {
 
 // --- Constants ---
 const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024; 
+
+// --- Helper Functions ---
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // --- Helper Components ---
 
@@ -477,6 +481,9 @@ const App = () => {
               if (note.content.length < 20) continue; 
 
               try {
+                // Rate Limit Protection: Wait 1.5 seconds between requests
+                await sleep(1500);
+
                 // Determine new metadata
                 const newSubject = await identifySubject(note.content);
                 const newTitle = (note.title === 'New Note' || note.title === 'Untitled Note' || note.title === 'Untitled') 
