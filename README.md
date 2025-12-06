@@ -6,7 +6,9 @@
 
 This contains everything you need to run your app locally.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1XT_qffpl2PPG7Df2VODRUX-rH3-Cd93P
+## About MindVault
+
+MindVault is an intelligent note-taking application powered by Google Gemini AI.
 
 ## Run Locally
 

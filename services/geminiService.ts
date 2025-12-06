@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
-import { GEMINI_FLASH_MODEL, GEMINI_PRO_MODEL, SUBJECTS } from "../constants";
+import { GEMINI_FLASH_MODEL, GEMINI_PRO_MODEL, GEMINI_DEEP_STUDY_MODEL, SUBJECTS } from "../constants";
 import { QuizQuestion, ChatMessage, Attachment } from "../types";
 
 const getAIClient = () => {
@@ -183,7 +183,7 @@ export const generateDetailedNotesFromPDF = async (pdfBase64: string): Promise<s
         const cleanBase64 = pdfBase64.includes('base64,') ? pdfBase64.split('base64,')[1] : pdfBase64;
         
         const response = await ai.models.generateContent({
-            model: GEMINI_PRO_MODEL,
+            model: GEMINI_DEEP_STUDY_MODEL,
             contents: {
                 parts: [
                     { inlineData: { mimeType: 'application/pdf', data: cleanBase64 } },
@@ -270,7 +270,7 @@ export const gradeAnswerSheet = async (
         parts.push({ text: prompt });
 
         const response = await ai.models.generateContent({
-            model: GEMINI_PRO_MODEL,
+            model: GEMINI_DEEP_STUDY_MODEL,
             contents: { parts }
         });
         return response.text || "Failed to grade.";

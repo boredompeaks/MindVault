@@ -1,6 +1,10 @@
 
-export const GEMINI_FLASH_MODEL = 'gemini-1.5-flash';
+// For regular operations - use faster, efficient models
+export const GEMINI_FLASH_MODEL = 'gemini-2.0-flash-exp';
 export const GEMINI_PRO_MODEL = 'gemini-1.5-pro';
+
+// For Deep Study features - use most powerful model
+export const GEMINI_DEEP_STUDY_MODEL = 'gemini-2.0-flash-thinking-exp-1219';
 export const APP_STORAGE_KEY = 'mindvault_notes_v3'; 
 export const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 
